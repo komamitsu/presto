@@ -80,7 +80,7 @@ public final class LikeFunctions
 
     private static boolean regexMatches(Regex regex, byte[] bytes)
     {
-        return regex.matcher(bytes).match(0, bytes.length, Option.NONE) != -1;
+        return regex.matcher(bytes).search(0, bytes.length, Option.NONE) != -1;
     }
 
     @SuppressWarnings("NestedSwitchStatement")
@@ -122,7 +122,16 @@ public final class LikeFunctions
         }
         regex.append('$');
 
-        byte[] bytes = regex.toString().getBytes(UTF_8);
+        // Optimize regex pattern
+        String regexStr = regex.toString();
+        if (patternString.startsWith("%") && regexStr.startsWith("^.*")) {
+            regexStr = regexStr.substring(3);
+        }
+        if (patternString.endsWith("%") && regexStr.endsWith(".*$")) {
+            regexStr = regexStr.substring(0, regexStr.length() - 3);
+        }
+
+        byte[] bytes = regexStr.getBytes(UTF_8);
         return new Regex(bytes, 0, bytes.length, Option.MULTILINE, UTF8Encoding.INSTANCE, SYNTAX);
     }
 
